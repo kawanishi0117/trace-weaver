@@ -1,0 +1,41 @@
+title: ログインフローテスト
+baseUrl: http://localhost:3000
+vars:
+  email: "${env.TEST_EMAIL}"
+  password: "${env.TEST_PASSWORD}"
+artifacts:
+  screenshots:
+    mode: before_each_step
+    format: jpeg
+    quality: 70
+  trace:
+    mode: on_failure
+  video:
+    mode: on_failure
+hooks: {}
+steps:
+  - goto: http://localhost:3000/login
+  - fill:
+      by:
+        testId: email-input
+      value: "${vars.email}"
+      name: メールアドレス入力
+  - fill:
+      by:
+        testId: password-input
+      value: "${vars.password}"
+      name: パスワード入力
+      secret: true
+  - click:
+      by:
+        role: button
+        name: ログイン
+      name: ログインボタンクリック
+  - expectUrl:
+      url: http://localhost:3000/dashboard
+      name: ダッシュボードに遷移確認
+  - expectVisible:
+      by:
+        testId: user-menu
+      name: ユーザーメニュー表示確認
+healing: off

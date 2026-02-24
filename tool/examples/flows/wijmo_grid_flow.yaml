@@ -1,0 +1,30 @@
+title: Wijmo Grid 操作テスト
+baseUrl: http://localhost:3000
+vars: {}
+artifacts:
+  screenshots:
+    mode: before_each_step
+    format: jpeg
+    quality: 70
+  trace:
+    mode: on_failure
+  video:
+    mode: on_failure
+hooks: {}
+steps:
+  - goto: http://localhost:3000/data-grid
+  - waitForVisible:
+      by:
+        testId: main-grid
+      name: グリッド表示待機
+  - clickWijmoGridCell:
+      grid:
+        testId: main-grid
+      rowKey: "row-001"
+      column: "名前"
+      name: グリッドセルクリック
+  - expectVisible:
+      by:
+        testId: detail-panel
+      name: 詳細パネル表示確認
+healing: off

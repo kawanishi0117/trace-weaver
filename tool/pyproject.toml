@@ -1,0 +1,48 @@
+# ブラウザ操作 Record/Replay テストツール
+# プロジェクト設定ファイル
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "browser-record-replay-tool"
+version = "0.1.0"
+description = "Python + Playwright codegen を基盤としたブラウザ操作 Record/Replay テストツール。YAML DSL によるテストシナリオの記録・変換・自動実行を提供する。"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+
+# 本体依存パッケージ
+dependencies = [
+    "playwright",
+    "pydantic>=2.0",
+    "ruamel.yaml",
+    "typer[all]",
+    "jinja2",
+]
+
+# テスト用依存パッケージ
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "hypothesis",
+    "pytest-asyncio",
+]
+
+# CLI エントリポイント
+[project.scripts]
+brt = "src.cli:app"
+
+# src レイアウト設定
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+# pytest 設定
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+# Hypothesis 設定（プロパティベーステスト）
+[tool.hypothesis]
+max_examples = 100

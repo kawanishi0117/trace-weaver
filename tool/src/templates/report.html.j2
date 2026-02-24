@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>テストレポート: {{ report.title }}</title>
+  <style>
+    /* ===== リセット・ベース ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --color-bg: #f8f9fa;
+      --color-surface: #ffffff;
+      --color-text: #1a1a2e;
+      --color-text-secondary: #6c757d;
+      --color-border: #dee2e6;
+      --color-passed: #198754;
+      --color-passed-bg: #d1e7dd;
+      --color-failed: #dc3545;
+      --color-failed-bg: #f8d7da;
+      --color-skipped: #6c757d;
+      --color-skipped-bg: #e9ecef;
+      --color-accent: #0d6efd;
+      --radius: 6px;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --font-mono: "SF Mono", "Cascadia Code", "Consolas", monospace;
+      --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.6;
+      padding: 24px 16px;
+    }
+
+    /* ===== レイアウト ===== */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* ===== ヘッダー ===== */
+    .header {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-passed {
+      background: var(--color-passed-bg);
+      color: var(--color-passed);
+    }
+
+    .status-failed {
+      background: var(--color-failed-bg);
+      color: var(--color-failed);
+    }
+
+    .status-skipped {
+      background: var(--color-skipped-bg);
+      color: var(--color-skipped);
+    }
+
+    /* ===== サマリーカード ===== */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .summary-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .summary-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .summary-card .label {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    /* ===== メタ情報 ===== */
+    .meta {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+    }
+
+    .meta span {
+      margin-right: 24px;
+    }
+
+    /* ===== ステップテーブル ===== */
+    .steps-section {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .steps-section h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead th {
+      background: var(--color-bg);
+      padding: 10px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-text-secondary);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    tbody td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: top;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    .step-name {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .step-type {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+    }
+
+    .step-duration {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+    }
+
+    .step-section {
+      font-size: 0.8rem;
+      color: var(--color-accent);
+    }
+
+    /* ===== エラー詳細 ===== */
+    .error-detail {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: var(--color-failed-bg);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--color-failed);
+      word-break: break-all;
+    }
+
+    /* ===== スクリーンショットリンク ===== */
+    .screenshot-link {
+      color: var(--color-accent);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    .screenshot-link:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== レスポンシブ ===== */
+    @media (max-width: 640px) {
+      body { padding: 12px 8px; }
+      .header { padding: 16px; }
+      .header h1 { font-size: 1.2rem; }
+      .meta span { display: block; margin-bottom: 4px; }
+      table { font-size: 0.8rem; }
+      thead th, tbody td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- ヘッダー -->
+    <div class="header">
+      <h1>{{ report.title }}</h1>
+      <span class="status-badge status-{{ report.status }}">{{ report.status }}</span>
+    </div>
+
+    <!-- サマリーカード -->
+    <div class="summary">
+      <div class="summary-card">
+        <div class="value">{{ report.summary.total }}</div>
+        <div class="label">合計</div>
+      </div>
+      <div class="summary-card">
+        <div class="value" style="color: var(--color-passed);">{{ report.summary.passed }}</div>
+        <div class="label">成功</div>
+      </div>
+      <div class="summary-card">
+        <div class="value" style="color: var(--color-failed);">{{ report.summary.failed }}</div>
+        <div class="label">失敗</div>
+      </div>
+      <div class="summary-card">
+        <div class="value" style="color: var(--color-skipped);">{{ report.summary.skipped }}</div>
+        <div class="label">スキップ</div>
+      </div>
+    </div>
+
+    <!-- メタ情報 -->
+    <div class="meta">
+      <span>実行時間: {{ "%.1f"|format(report.duration_ms) }} ms</span>
+      {% if report.started_at %}
+      <span>開始: {{ report.started_at }}</span>
+      {% endif %}
+      {% if report.finished_at %}
+      <span>終了: {{ report.finished_at }}</span>
+      {% endif %}
+    </div>
+
+    <!-- ステップ一覧 -->
+    <div class="steps-section">
+      <h2>ステップ一覧</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>ステップ名</th>
+            <th>種別</th>
+            <th>セクション</th>
+            <th>ステータス</th>
+            <th>実行時間</th>
+            <th>スクリーンショット</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for step in report.steps %}
+          <tr>
+            <td>{{ step.step_index }}</td>
+            <td>
+              <span class="step-name">{{ step.step_name }}</span>
+              {% if step.status == "failed" and step.error %}
+              <div class="error-detail">{{ step.error }}</div>
+              {% endif %}
+            </td>
+            <td><span class="step-type">{{ step.step_type }}</span></td>
+            <td>
+              {% if step.section %}
+              <span class="step-section">{{ step.section }}</span>
+              {% else %}
+              <span class="step-type">—</span>
+              {% endif %}
+            </td>
+            <td><span class="status-badge status-{{ step.status }}">{{ step.status }}</span></td>
+            <td><span class="step-duration">{{ "%.1f"|format(step.duration_ms) }} ms</span></td>
+            <td>
+              {% if step.screenshot_path %}
+              <a class="screenshot-link" href="{{ step.screenshot_path }}">📷 表示</a>
+              {% else %}
+              <span class="step-type">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

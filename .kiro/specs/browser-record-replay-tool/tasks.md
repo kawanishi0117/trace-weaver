@@ -1,0 +1,347 @@
+# 実装計画: ブラウザ操作 Record/Replay テストツール
+
+## 概要
+
+Python + Playwright codegen を基盤としたブラウザ操作 Record/Replay テストツールを、DSL スキーマ → パーサー → Linter → セレクタ → ステップライブラリ → Importer → Runner → アーティファクト → レポート → AI Authoring → CLI の順にインクリメンタルに実装する。各タスクは前のタスクの成果物に依存し、最終的に CLI で全機能を統合する。
+
+## タスク
+
+- [x] 1. プロジェクト構造とテスト基盤のセットアップ
+  - [x] 1.1 ディレクトリ構造と `__init__.py` の作成
+    - `tool/src/core/`, `tool/src/dsl/`, `tool/src/steps/`, `tool/src/importer/`, `tool/src/ai/` の各ディレクトリに `__init__.py` を配置
+    - `tool/tests/` 配下に `test_dsl/`, `test_importer/`, `test_core/`, `test_steps/`, `test_ai/`, `test_session/` を作成
+    - _要件: 全体_
+  - [x] 1.2 依存関係の定義（`pyproject.toml` または `requirements.txt`）
+    - playwright, pydantic>=2.0, ruamel.yaml, typer, jinja2, pytest, hypothesis を定義
+    - _要件: 全体_
+  - [x] 1.3 テスト共通フィクスチャの作成（`tests/conftest.py`）
+    - Hypothesis ストラテジー（セレクタ生成、ステップ生成、Scenario 生成）を定義
+    - pytest フィクスチャ（一時ディレクトリ、サンプル Scenario 等）を定義
+    - _要件: 全体_
+
+- [x] 2. DSL スキーマの実装（`dsl/schema.py`）
+  - [x] 2.1 セレクタモデルの実装
+    - `TestIdSelector`, `RoleSelector`, `LabelSelector`, `PlaceholderSelector`, `CssSelector`, `TextSelector`, `AnySelector` の Pydantic v2 モデルを実装
+    - `BySelector` Union 型を定義
+    - _要件: 4.1, 4.2_
+  - [x] 2.2 ステップモデルの実装
+    - 標準ステップ（`GotoStep`, `ClickStep`, `FillStep`, `PressStep`, `CheckStep`, `UncheckStep`, `SelectOptionStep` 等）の Pydantic モデルを実装
+    - 待機ステップ（`WaitForStep`, `WaitForVisibleStep`, `WaitForHiddenStep`, `WaitForNetworkIdleStep`）を実装
+    - 検証ステップ（`ExpectVisibleStep`, `ExpectHiddenStep`, `ExpectTextStep`, `ExpectUrlStep`）を実装
+    - 取得ステップ（`StoreTextStep`, `StoreAttrStep`）、デバッグステップ（`ScreenshotStep`, `LogStep`, `DumpDomStep`）を実装
+    - セッションステップ（`UseStorageStateStep`, `SaveStorageStateStep`）を実装
+    - _要件: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
+  - [x] 2.3 高レベルステップモデルの実装
+    - `SelectOverlayOptionStep`, `SelectWijmoComboStep`, `ClickWijmoGridCellStep`, `SetDatePickerStep`, `UploadFileStep`, `WaitForToastStep`, `AssertNoConsoleErrorStep`, `ApiMockStep`, `RouteStubStep` を実装
+    - _要件: 6.1, 6.3, 6.4, 6.6, 6.7, 6.8, 6.9, 6.10_
+  - [x] 2.4 Scenario モデルの実装
+    - `ScreenshotConfig`, `TraceConfig`, `VideoConfig`, `ArtifactsConfig`, `HooksConfig`, `Scenario` モデルを実装
+    - `vars` フィールドの変数展開構文（`${env.X}`, `${vars.X}`）のバリデーションを実装
+    - `secret: true` フラグ、`healing` フィールド（off/safe）を実装
+    - _要件: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
+
+  - [ ]* 2.5 プロパティテスト: Pydantic スキーマ検証の完全性
+    - **Property 6: Pydantic スキーマ検証の完全性**
+    - 有効な YAML DSL は検証成功、必須フィールド欠落時は検証エラーを確認
+    - **検証対象: 要件 3.1, 3.4, 3.5, 3.7**
+
+- [x] 3. DSL パーサーの実装（`dsl/parser.py`）
+  - [x] 3.1 DslParser クラスの実装
+    - `load(path)`: ruamel.yaml で YAML を読み込み、Pydantic モデルに変換
+    - `dump(scenario, path)`: Pydantic モデルを YAML に書き出し（コメント保持）
+    - `validate(path)`: YAML ファイルのスキーマ検証、違反箇所の報告
+    - _要件: 3.7, 3.8_
+  - [x] 3.2 変数展開エンジンの実装
+    - `${env.X}` → 環境変数参照、`${vars.X}` → シナリオ変数参照の展開処理
+    - ステップ実行時の遅延評価メカニズム
+    - 未定義変数参照時のエラーハンドリング
+    - _要件: 3.2_
+  - [ ]* 3.3 プロパティテスト: YAML DSL パース-出力ラウンドトリップ
+    - **Property 1: YAML DSL パース-出力ラウンドトリップ**
+    - 任意の有効な Scenario を dump → load した結果が元と意味的に等価であることを検証
+    - **検証対象: 要件 3.8**
+  - [ ]* 3.4 プロパティテスト: 変数展開の正確性
+    - **Property 7: 変数展開の正確性**
+    - `${env.X}` と `${vars.X}` が正しく展開され、未解決パターンが残らないことを検証
+    - **検証対象: 要件 3.2**
+
+- [x] 4. チェックポイント - DSL 基盤の検証
+  - すべてのテストが通ることを確認し、不明点があればユーザーに質問する。
+
+- [x] 5. DSL Linter の実装（`dsl/linter.py`）
+  - [x] 5.1 LintIssue データクラスと DslLinter クラスの実装
+    - `LintSeverity` enum（error/warning/info）の定義
+    - `LintIssue` データクラス（step_name, line_number, severity, rule, message）の定義
+    - `lint(scenario)` メソッド: 全 lint ルールを適用し問題を検出
+    - _要件: 12.4_
+  - [x] 5.2 Lint ルールの実装
+    - `_check_text_only_selector`: text セレクタ単体使用 → warning
+    - `_check_missing_any_fallback`: any フォールバック未設定 → info
+    - `_check_missing_secret`: パスワード系フィールドの secret 未設定 → warning
+    - _要件: 12.1, 12.2, 12.3_
+  - [ ]* 5.3 プロパティテスト: Lint ルールの検出網羅性
+    - **Property 13: Lint ルールの検出網羅性**
+    - text 単体 → warning、any 未設定 → info、secret 未設定 → warning の全パターン検出を検証
+    - **検証対象: 要件 4.5, 12.1, 12.2, 12.3, 12.4**
+
+- [x] 6. セレクタリゾルバの実装（`core/selector.py`）
+  - [x] 6.1 SelectorResolver クラスの実装
+    - `resolve(page, by)`: BySelector を Playwright Locator に変換
+    - `_resolve_single(page, selector)`: 単一セレクタの解決（testId → get_by_test_id, role → get_by_role 等）
+    - `strict: true` をデフォルトで適用
+    - _要件: 4.1, 4.2_
+  - [x] 6.2 any フォールバックの実装
+    - `_resolve_any(page, candidates)`: 候補リストを上から順に試行、visible かつ strict を満たす最初の候補を採用
+    - 全候補失敗時のエラーメッセージ（全候補のセレクタ情報と失敗理由を含む）
+    - _要件: 4.3, 4.4_
+  - [x] 6.3 Healing（safe モード）の実装
+    - `_try_healing(page, original)`: セレクタ不一致時に testId/role/name/label の範囲で再解決を試行
+    - healing: off 時は即座にエラー
+    - _要件: 7.10, 7.11_
+  - [ ]* 6.4 プロパティテスト: By セレクタの Playwright Locator 変換
+    - **Property 9: By セレクタの Playwright Locator 変換**
+    - 有効な BySelector に対して正しい Playwright Locator メソッドが生成されることを検証
+    - **検証対象: 要件 4.1**
+  - [ ]* 6.5 プロパティテスト: strict モードのデフォルト有効化
+    - **Property 10: strict モードのデフォルト有効化**
+    - strict 未指定時にデフォルトで true として動作することを検証
+    - **検証対象: 要件 4.2, 13.4**
+  - [ ]* 6.6 プロパティテスト: any フォールバックの順序保証
+    - **Property 11: any フォールバックの順序保証**
+    - 候補リストの先頭から順に試行し、条件を満たした時点で後続を試行しないことを検証
+    - **検証対象: 要件 4.3**
+  - [ ]* 6.7 プロパティテスト: any フォールバック全候補失敗時のエラー情報
+    - **Property 12: any フォールバック全候補失敗時のエラー情報**
+    - 全候補失敗時にエラーメッセージに全候補の情報と失敗理由が含まれることを検証
+    - **検証対象: 要件 4.4**
+
+- [x] 7. ステップライブラリの実装（`steps/`）
+  - [x] 7.1 StepRegistry とプラグインアーキテクチャの実装
+    - `StepRegistry` クラス: `register()`, `get()`, `list_all()` メソッド
+    - `StepHandler` Protocol: `execute()`, `get_schema()` メソッド
+    - `StepContext` データクラス: 実行コンテキスト情報
+    - _要件: 5.8, 15.1_
+  - [x] 7.2 標準ステップハンドラの実装（`steps/builtin.py`）
+    - ナビゲーション: `goto`（waitForLoadState 付き）, `back`, `reload`
+    - 操作: `click`, `dblclick`, `fill`, `press`, `check`, `uncheck`, `selectOption`
+    - 待機: `waitFor`, `waitForVisible`, `waitForHidden`, `waitForNetworkIdle`
+    - 検証: `expectVisible`, `expectHidden`, `expectText`, `expectUrl`
+    - 取得: `storeText`, `storeAttr`
+    - デバッグ: `screenshot`, `log`, `dumpDom`
+    - セッション: `useStorageState`, `saveStorageState`
+    - _要件: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
+  - [x] 7.3 高レベルステップハンドラの実装
+    - `steps/overlay.py`: `selectOverlayOption`（open → list 可視化待機 → optionText 選択）
+    - `steps/wijmo_combo.py`: `selectWijmoCombo`（root 指定 + optionText 選択）
+    - `steps/wijmo_grid.py`: `clickWijmoGridCell`（仮想スクロール対応 + rowKey/column 指定）
+    - `steps/datepicker.py`: `setDatePicker`（日付入力）
+    - `steps/upload.py`: `uploadFile`（input[type=file] / UI ボタン経由）
+    - `waitForToast`, `assertNoConsoleError`, `apiMock`, `routeStub` を `builtin.py` または専用ファイルに実装
+    - _要件: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10_
+
+  - [ ]* 7.4 プロパティテスト: 全標準ステップのレジストリ登録
+    - **Property 14: 全標準ステップのレジストリ登録**
+    - 全25種の標準ステップ名に対して StepRegistry からハンドラが取得でき、StepHandler プロトコルを満たすことを検証
+    - **検証対象: 要件 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7**
+  - [ ]* 7.5 プロパティテスト: プラグインステップの登録と統合
+    - **Property 15: プラグインステップの登録と統合**
+    - カスタムステップ登録後に get() で取得可能、list_all() に含まれることを検証
+    - **検証対象: 要件 5.8, 15.1, 15.2, 15.3**
+
+- [x] 8. チェックポイント - コアコンポーネントの検証
+  - すべてのテストが通ることを確認し、不明点があればユーザーに質問する。
+
+- [x] 9. Importer の実装（`importer/`）
+  - [x] 9.1 PyAstParser の実装（`importer/py_ast_parser.py`）
+    - Python AST を解析し、`RawAction` 中間表現リストを生成
+    - `page.goto(url)`, `page.get_by_role(role, name).click()`, `page.get_by_test_id(id).click()`, `page.locator(css).fill(value)`, `expect(...)` パターンの認識
+    - 未対応パターンの警告出力とコメント保持
+    - _要件: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
+  - [x] 9.2 Mapper の実装（`importer/mapper.py`）
+    - `RawAction` リストを DSL ステップリストに変換
+    - locator 文字列の正規化（`css=` プレフィックス等の差異吸収）
+    - _要件: 2.2, 2.3, 2.4, 2.5, 2.6, 2.9_
+  - [x] 9.3 Heuristics の実装（`importer/heuristics.py`）
+    - `auto_section()`: URL パスやボタン文言に基づくセクション自動生成
+    - `auto_name()`: 動詞-目的語形式のステップ名自動付与
+    - `detect_secret()`: パスワード関連フィールドの検出と `secret: true` 付与
+    - `--with-expects` オプション: 重要操作後の `expectVisible` 補助挿入
+    - _要件: 2.7, 2.8, 2.9, 2.10, 2.11_
+  - [ ]* 9.4 プロパティテスト: Importer AST マッピングの正確性
+    - **Property 2: Importer AST マッピングの正確性**
+    - 有効な Playwright Python AST パターンに対して正しいステップ種別・セレクタ・パラメータが生成されることを検証
+    - **検証対象: 要件 2.1, 2.2, 2.3, 2.4, 2.5, 2.6**
+  - [ ]* 9.5 プロパティテスト: ステップ名の自動付与
+    - **Property 3: Importer ステップ名の自動付与**
+    - 自動付与される name が空でなく、動詞-目的語形式であることを検証
+    - **検証対象: 要件 2.7**
+  - [ ]* 9.6 プロパティテスト: locator 正規化の冪等性
+    - **Property 4: locator 文字列の正規化の冪等性**
+    - 正規化を1回適用した結果と2回適用した結果が同一であることを検証
+    - **検証対象: 要件 2.9**
+  - [ ]* 9.7 プロパティテスト: パスワードフィールドの secret 自動検出
+    - **Property 5: パスワードフィールドの secret 自動検出**
+    - パスワード関連キーワードを含むフィールドに `secret: true` が付与されることを検証
+    - **検証対象: 要件 2.10**
+
+- [x] 10. Runner の実装（`core/runner.py`）
+  - [x] 10.1 RunnerConfig, StepResult, ScenarioResult データクラスの実装
+    - `RunnerConfig`: headed, workers, headless オプション
+    - `StepResult`: step_name, status, duration_ms, error, screenshot_path
+    - `ScenarioResult`: scenario_title, status, steps, duration_ms, artifacts_dir
+    - _要件: 7.1_
+  - [x] 10.2 Runner クラスのライフサイクル実装
+    - `run(scenario, config)`: config 読込 → Browser/Context 生成 → trace 開始 → ステップループ → 成果物管理 → レポート生成
+    - `_setup_context(scenario)`: viewport, timezone, locale, headers, storageState の設定
+    - headed/headless オプションの反映
+    - _要件: 7.1, 7.2, 7.7, 7.8_
+  - [x] 10.3 ステップ実行ループとフック処理の実装
+    - `_execute_step(page, step)`: beforeEachStep → ステップ本体 → afterEachStep の順序保証
+    - `_dispatch_step(page, step)`: ステップ種別に応じた StepRegistry へのディスパッチ
+    - goto 後の `waitForLoadState("domcontentloaded")` 自動実行
+    - _要件: 7.3, 7.4, 7.5_
+  - [x] 10.4 エラーハンドリングと並列実行の実装
+    - エラー発生時のスクリーンショット・トレース・動画保存
+    - `--workers N` による並列実行（asyncio ベース）
+    - healing モード（off/safe）の統合
+    - _要件: 7.6, 7.9, 7.10, 7.11_
+  - [x] 10.5 待機戦略の実装（`core/waits.py`）
+    - Playwright auto-wait の活用
+    - Overlay 系ステップの可視化待機
+    - Wijmo Grid 仮想スクロールの探索ループ
+    - _要件: 13.1, 13.2, 13.3_
+  - [ ]* 10.6 プロパティテスト: フック実行順序の保証
+    - **Property 16: フック実行順序の保証**
+    - beforeEachStep → ステップ本体 → afterEachStep の順序が常に守られることを検証
+    - **検証対象: 要件 7.5**
+  - [ ]* 10.7 プロパティテスト: 実行環境の Scenario 設定反映
+    - **Property 17: 実行環境の Scenario 設定反映**
+    - viewport, timezone, locale, headers, storageState が BrowserContext に正確に反映されることを検証
+    - **検証対象: 要件 7.2, 14.1, 14.3**
+
+- [x] 11. チェックポイント - 実行エンジンの検証
+  - すべてのテストが通ることを確認し、不明点があればユーザーに質問する。
+
+- [x] 12. アーティファクト管理の実装（`core/artifacts.py`）
+  - [x] 12.1 ArtifactsManager クラスの実装
+    - `create_run_dir()`: `artifacts/run-YYYYMMDD-HHMMSS/` ディレクトリ作成
+    - `save_screenshot(page, step_index, step_name)`: `NNNN_before-<step-name>.jpg` 形式で保存（JPEG quality: 70）
+    - `save_trace(context)`: トレースを `trace/trace.zip` に保存
+    - `save_video()`: 動画を `video/` に保存
+    - `save_flow_copy(scenario)`: YAML DSL コピーを `flow.yaml` に保存
+    - `save_env_info(scenario)`: 環境情報（秘密値マスク済み）を `env.json` に保存
+    - `cleanup_on_success()`: 成功時に on_failure 成果物（動画等）を削除
+    - ログ出力: `logs/runner.log`, `logs/console.log`
+    - _要件: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9_
+  - [x] 12.2 秘密値マスク処理の実装
+    - `secret: true` フラグ付きの値をログ・レポート・env.json で `***` にマスク
+    - _要件: 3.3, 8.9_
+  - [ ]* 12.3 プロパティテスト: 秘密値のマスク保証
+    - **Property 8: 秘密値のマスク保証**
+    - `secret: true` の値がログ・JSON レポート・HTML レポート・env.json に平文で含まれないことを検証
+    - **検証対象: 要件 3.3, 8.9**
+  - [ ]* 12.4 プロパティテスト: スクリーンショットのファイル名規則
+    - **Property 18: スクリーンショットのファイル名規則**
+    - ファイル名が `NNNN_before-<step-name>.jpg` 形式であることを検証
+    - **検証対象: 要件 8.1**
+  - [ ]* 12.5 プロパティテスト: YAML DSL コピーの同一性
+    - **Property 19: YAML DSL コピーの同一性**
+    - `flow.yaml` をパースした結果が元の Scenario と意味的に等価であることを検証
+    - **検証対象: 要件 8.8**
+
+- [x] 13. レポート生成の実装（`core/reporting.py`）
+  - [x] 13.1 Reporter クラスの実装
+    - `generate_json(result)`: JSON レポートを `report.json` に生成
+    - `generate_html(result)`: Jinja2 テンプレート（`templates/report.html.j2`）を使用した HTML レポート生成
+    - `generate_junit_xml(result)`: JUnit XML レポート生成（CI 統合用）
+    - _要件: 9.1, 9.2, 9.3, 9.4_
+  - [x] 13.2 HTML レポートテンプレートの作成（`templates/report.html.j2`）
+    - 各ステップのスクリーンショットへのリンク
+    - 失敗ステップの詳細情報（ステップ名、セレクタ、エラーメッセージ）
+    - 各ステップの実行時間
+    - _要件: 9.3_
+  - [ ]* 13.3 プロパティテスト: HTML レポートの必須情報包含
+    - **Property 20: HTML レポートの必須情報包含**
+    - HTML レポートにスクリーンショットリンク、失敗詳細、実行時間が含まれることを検証
+    - **検証対象: 要件 9.3**
+
+- [x] 14. セッション管理の実装
+  - [x] 14.1 useStorageState / saveStorageState ハンドラの統合テスト
+    - storageState の保存・復元が正しく動作することを確認
+    - _要件: 14.2_
+  - [ ]* 14.2 プロパティテスト: storageState の保存・復元ラウンドトリップ
+    - **Property 23: storageState の保存・復元ラウンドトリップ**
+    - saveStorageState → useStorageState で元の状態と等価であることを検証
+    - **検証対象: 要件 14.2**
+
+- [x] 15. チェックポイント - アーティファクト・レポート・セッションの検証
+  - すべてのテストが通ることを確認し、不明点があればユーザーに質問する。
+
+- [x] 16. AI Authoring の実装（`ai/`）
+  - [x] 16.1 AiDrafter の実装（`ai/draft.py`）
+    - 自然言語仕様から YAML DSL Scenario を生成
+    - プロンプトテンプレート（`ai/prompts.py`）の定義
+    - 出力の Pydantic スキーマ検証
+    - _要件: 11.1, 11.4_
+  - [x] 16.2 AiRefiner の実装（`ai/refine.py`）
+    - import 後の YAML DSL に対して section 付与、命名改善、expect 補強、重複整理
+    - `secret: true` フラグの保持保証
+    - 禁止パターン（text 単体セレクタ等）の lint 警告出力
+    - _要件: 11.2, 11.5, 11.6_
+  - [x] 16.3 AiExplainer の実装（`ai/prompts.py` 内）
+    - YAML DSL からアウトライン（章立てと要点）を自然言語で生成
+    - _要件: 11.3_
+  - [ ]* 16.4 プロパティテスト: AI Authoring 出力のスキーマ準拠
+    - **Property 21: AI Authoring 出力のスキーマ準拠**
+    - AI draft/refine の出力が Pydantic スキーマ検証に成功することを検証
+    - **検証対象: 要件 11.4**
+  - [ ]* 16.5 プロパティテスト: AI Authoring の secret フラグ保持
+    - **Property 22: AI Authoring の secret フラグ保持**
+    - refine 処理後も全ての secret フラグが保持されることを検証
+    - **検証対象: 要件 11.5**
+
+- [x] 17. CLI の実装（Typer）
+  - [x] 17.1 CLI エントリポイントとコマンド定義
+    - Typer アプリケーションの作成
+    - `init`: プロジェクト雛形生成（ディレクトリ構造、設定ファイルテンプレート）
+    - `record <url>`: Playwright codegen を Python ターゲットで起動、`recordings/raw_<識別名>.py` に保存
+    - `import <python-file> -o <yaml-file>`: Python → YAML DSL 変換（`--with-expects` オプション対応）
+    - `run <yaml-file>`: シナリオ実行（`--headed`, `--headless`, `--workers N` オプション）
+    - `validate <yaml-file>`: スキーマ検証
+    - `lint <yaml-file>`: 静的解析
+    - `report <artifacts-dir>`: HTML レポート再生成
+    - `list-steps`: 全ステップ一覧（標準 + 高レベル + カスタム）
+    - _要件: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8_
+  - [x] 17.2 AI サブコマンドの実装
+    - `ai draft`: 自然言語 → YAML DSL 生成
+    - `ai refine`: YAML DSL 整形・改善
+    - `ai explain`: YAML DSL → アウトライン生成
+    - _要件: 11.1, 11.2, 11.3_
+  - [x] 17.3 終了コードとエラー出力の実装
+    - 成功時: 終了コード 0
+    - 失敗時: 終了コード 1
+    - エラーメッセージの統一フォーマット
+    - _要件: 9.5, 9.6_
+
+- [x] 18. 統合と結合
+  - [x] 18.1 全コンポーネントの結合
+    - CLI → DSL Parser → Runner → StepRegistry → SelectorResolver → ArtifactsManager → Reporter のフロー統合
+    - CLI → Importer → DSL Parser のフロー統合
+    - CLI → AI Authoring → DSL Parser → Linter のフロー統合
+    - _要件: 全体_
+  - [x] 18.2 サンプルフローの作成（`examples/flows/`）
+    - 基本的なログインフローの YAML DSL サンプル
+    - Wijmo Grid 操作を含むフローのサンプル
+    - オーバーレイ操作を含むフローのサンプル
+    - _要件: 全体_
+
+- [x] 19. 最終チェックポイント - 全テスト通過の確認
+  - すべてのテストが通ることを確認し、不明点があればユーザーに質問する。
+
+## 備考
+
+- `*` マーク付きのタスクはオプションであり、MVP では省略可能
+- 各タスクは対応する要件番号を明記しており、トレーサビリティを確保
+- チェックポイントでインクリメンタルに品質を検証
+- プロパティテスト（Hypothesis）は普遍的な正しさを保証し、ユニットテストは具体的なエッジケースを捕捉する
+- Property 1〜23 の全プロパティがタスクとしてカバーされている

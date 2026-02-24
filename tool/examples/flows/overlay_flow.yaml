@@ -1,0 +1,42 @@
+title: オーバーレイ選択テスト
+baseUrl: http://localhost:3000
+vars: {}
+artifacts:
+  screenshots:
+    mode: before_each_step
+    format: jpeg
+    quality: 70
+  trace:
+    mode: on_failure
+  video:
+    mode: on_failure
+hooks: {}
+steps:
+  - goto: http://localhost:3000/form
+  - selectOverlayOption:
+      open:
+        testId: category-select
+      list:
+        css: ".cdk-overlay-pane mat-option"
+      optionText: "カテゴリA"
+      name: カテゴリ選択
+  - selectWijmoCombo:
+      root:
+        testId: status-combo
+      optionText: "有効"
+      name: ステータス選択
+  - setDatePicker:
+      by:
+        testId: start-date
+      date: "2024-01-15"
+      name: 開始日設定
+  - click:
+      by:
+        role: button
+        name: 保存
+      name: 保存ボタンクリック
+  - expectVisible:
+      by:
+        text: 保存しました
+      name: 保存完了メッセージ確認
+healing: off

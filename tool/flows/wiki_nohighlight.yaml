@@ -1,0 +1,32 @@
+title: Imported from wiki_nohighlight.py
+baseUrl: https://ja.wikipedia.org
+vars: {}
+artifacts:
+  screenshots:
+    mode: before_each_step
+    format: jpeg
+    quality: 70
+  trace:
+    mode: on_failure
+  video:
+    mode: on_failure
+hooks:
+  beforeEachStep: []
+  afterEachStep: []
+steps:
+- goto:
+    url: https://ja.wikipedia.org
+    name: navigate-to
+- click:
+    by:
+      role: link
+      name: Wikipedia:今日の一枚
+      exact: true
+    name: click-wikipedia
+- click:
+    by:
+      role: link
+      name: Wikipedia:秀逸な画像
+      exact: true
+    name: click-wikipedia
+healing: off
