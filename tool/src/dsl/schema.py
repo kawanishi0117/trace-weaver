@@ -253,6 +253,23 @@ class SelectOptionStep(BaseModel):
     frame: Optional[str] = Field(default=None, description="iframe セレクタ（iframe 内操作時）")
 
 
+class ScrollStep(BaseModel):
+    """マウスホイール相当のスクロールを実行するステップ。"""
+
+    scroll: bool = Field(default=True, description="スクロールステップのマーカー")
+    deltaX: int = Field(default=0, description="横方向スクロール量（px）")
+    deltaY: int = Field(default=0, description="縦方向スクロール量（px）")
+    name: Optional[str] = Field(default=None, description="ステップ名（任意）")
+
+
+class ScrollIntoViewStep(BaseModel):
+    """対象要素が表示領域に入るまでスクロールするステップ。"""
+
+    scrollIntoView: BySelector = Field(..., description="スクロール対象のセレクタ")
+    name: Optional[str] = Field(default=None, description="ステップ名（任意）")
+    frame: Optional[str] = Field(default=None, description="iframe セレクタ（iframe 内操作時）")
+
+
 # ---------------------------------------------------------------------------
 # 待機ステップ
 # ---------------------------------------------------------------------------
@@ -641,6 +658,8 @@ StepType = Union[
     CheckStep,
     UncheckStep,
     SelectOptionStep,
+    ScrollStep,
+    ScrollIntoViewStep,
     # 待機
     WaitForStep,
     WaitForVisibleStep,

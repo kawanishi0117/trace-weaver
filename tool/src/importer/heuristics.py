@@ -35,6 +35,8 @@ _STEP_VERB_MAP: dict[str, str] = {
     "uncheck": "uncheck",
     "dblclick": "dblclick",
     "selectOption": "select",
+    "scroll": "scroll",
+    "scrollIntoView": "scroll-into-view",
     "expectVisible": "expect-visible",
     "expectHidden": "expect-hidden",
     "expectText": "expect-text",

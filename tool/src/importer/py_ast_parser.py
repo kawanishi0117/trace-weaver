@@ -80,6 +80,7 @@ _ACTION_METHODS = frozenset({
     "check",
     "uncheck",
     "select_option",
+    "scroll_into_view_if_needed",
 })
 
 # expect のアサーションメソッド
@@ -293,6 +294,10 @@ class PyAstParser:
 
         # page.goto("url") — 直接メソッド呼び出し
         if isinstance(func, ast.Attribute):
+            # page.mouse.wheel(dx, dy) パターン
+            if func.attr == "wheel" and self._is_page_mouse_ref(func.value):
+                return self._parse_mouse_wheel(node)
+
             # page.goto パターン
             if func.attr == "goto" and self._is_page_ref(func.value):
                 return self._parse_goto(node)
@@ -380,6 +385,7 @@ class PyAstParser:
             "check": "check",
             "uncheck": "uncheck",
             "select_option": "select_option",
+            "scroll_into_view_if_needed": "scroll_into_view",
         }
         return mapping.get(method, method)
 
@@ -410,7 +416,32 @@ class PyAstParser:
             if value is not None:
                 args["value"] = value
 
+        elif method == "scroll_into_view_if_needed":
+            # 引数なし。オプション引数は将来拡張で対応。
+            pass
+
         return args
+
+    def _parse_mouse_wheel(self, node: ast.Call) -> RawAction:
+        """page.mouse.wheel(dx, dy) パターンを解析する。"""
+        delta_x = 0
+        delta_y = 0
+
+        if len(node.args) >= 1:
+            x_val = self._extract_number(node.args[0])
+            if x_val is not None:
+                delta_x = x_val
+        if len(node.args) >= 2:
+            y_val = self._extract_number(node.args[1])
+            if y_val is not None:
+                delta_y = y_val
+
+        return RawAction(
+            action_type="scroll",
+            locator_chain=[],
+            args={"deltaX": delta_x, "deltaY": delta_y},
+            line_number=node.lineno,
+        )
 
     # -------------------------------------------------------------------
     # ロケータチェーンの抽出
@@ -580,6 +611,15 @@ class PyAstParser:
         """
         return isinstance(node, ast.Name) and node.id == "page"
 
+    def _is_page_mouse_ref(self, node: ast.expr) -> bool:
+        """node が page.mouse を指す場合に True を返す。"""
+        return (
+            isinstance(node, ast.Attribute)
+            and node.attr == "mouse"
+            and isinstance(node.value, ast.Name)
+            and node.value.id == "page"
+        )
+
     def _extract_string(self, node: ast.expr) -> Optional[str]:
         """AST ノードから文字列リテラルを抽出する。
 
@@ -615,6 +655,12 @@ class PyAstParser:
                 return str(node.value)
             if isinstance(node.value, (int, float)):
                 return str(node.value)
+        return None
+
+    def _extract_number(self, node: ast.expr) -> Optional[int]:
+        """AST ノードから int/float リテラルを int として抽出する。"""
+        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+            return int(node.value)
         return None
 
     # codegen が生成するブラウザ/コンテキスト終了処理など、

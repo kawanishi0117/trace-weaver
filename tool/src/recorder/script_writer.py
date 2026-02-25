@@ -128,6 +128,11 @@ class ScriptWriter:
                 return f'page.goto("{_escape_string(url)}")'
             return ""
 
+        if action.action == "scroll":
+            dx = int((action.selector or {}).get("deltaX", 0) if action.selector else 0)
+            dy = int((action.selector or {}).get("deltaY", 0) if action.selector else 0)
+            return f"page.mouse.wheel({dx}, {dy})"
+
         selector = action.selector
         if not selector:
             return ""
@@ -138,6 +143,9 @@ class ScriptWriter:
 
         if action.action == "click":
             return f"{locator}.click()"
+
+        if action.action == "scrollIntoView":
+            return f"{locator}.scroll_into_view_if_needed()"
 
         if action.action == "fill":
             value = _escape_string(action.value or "")

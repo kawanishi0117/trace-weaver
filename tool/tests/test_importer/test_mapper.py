@@ -609,3 +609,31 @@ class TestJapaneseText:
         result = mapper.map([raw])
 
         assert result[0] == {"click": {"by": {"text": "ようこそ"}}}
+
+
+# ===========================================================================
+# 12. scroll ステップの変換
+# ===========================================================================
+
+class TestScrollMapping:
+    """scroll / scrollIntoView の変換テスト。"""
+
+    def test_scroll_from_mouse_wheel(self, mapper: Mapper) -> None:
+        raw = RawAction(
+            action_type="scroll",
+            locator_chain=[],
+            args={"deltaX": 0, "deltaY": 900},
+            line_number=1,
+        )
+        result = mapper.map([raw])
+        assert result[0] == {"scroll": {"deltaX": 0, "deltaY": 900}}
+
+    def test_scroll_into_view(self, mapper: Mapper) -> None:
+        raw = RawAction(
+            action_type="scroll_into_view",
+            locator_chain=["get_by_test_id", "grid-row-200"],
+            args={},
+            line_number=1,
+        )
+        result = mapper.map([raw])
+        assert result[0] == {"scrollIntoView": {"by": {"testId": "grid-row-200"}}}

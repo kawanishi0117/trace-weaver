@@ -554,3 +554,29 @@ expect(page.get_by_role("heading", name="ダッシュボード")).to_be_visible(
         assert "name=ログイン" in actions[0].locator_chain
         assert "ようこそ" in actions[1].locator_chain
         assert "name=ダッシュボード" in actions[2].locator_chain
+
+
+# ===========================================================================
+# 13. scroll 系パターン
+# ===========================================================================
+
+class TestScrollPattern:
+    """scroll 系パターンの認識テスト。"""
+
+    def test_mouse_wheel(self, parser: PyAstParser) -> None:
+        """page.mouse.wheel(dx, dy) を scroll として認識できること。"""
+        source = 'page.mouse.wheel(0, 1200)'
+        actions = parser.parse(source)
+
+        assert len(actions) == 1
+        assert actions[0].action_type == "scroll"
+        assert actions[0].args == {"deltaX": 0, "deltaY": 1200}
+
+    def test_scroll_into_view_if_needed(self, parser: PyAstParser) -> None:
+        """locator.scroll_into_view_if_needed() を認識できること。"""
+        source = 'page.get_by_test_id("target").scroll_into_view_if_needed()'
+        actions = parser.parse(source)
+
+        assert len(actions) == 1
+        assert actions[0].action_type == "scroll_into_view"
+        assert actions[0].locator_chain == ["get_by_test_id", "target"]
