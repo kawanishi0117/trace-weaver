@@ -105,6 +105,20 @@ class SelectOptionParams(BaseModel):
     name: str | None = None
 
 
+class ScrollParams(BaseModel):
+    """scroll ステップのパラメータ。"""
+    deltaX: int = 0
+    deltaY: int = 0
+    name: str | None = None
+
+
+class ScrollIntoViewParams(BaseModel):
+    """scrollIntoView ステップのパラメータ。"""
+    by: dict
+    frame: str | None = None
+    name: str | None = None
+
+
 # --- 待機 ---
 
 class WaitForParams(BaseModel):
@@ -340,6 +354,16 @@ class ReloadHandler:
 # 操作ハンドラ
 # ===========================================================================
 
+
+async def _prepare_locator_for_action(locator) -> None:
+    """操作前に locator を安定化する。"""
+    try:
+        await locator.scroll_into_view_if_needed(timeout=5_000)
+    except Exception:
+        # 画面外でもクリック可能なケースがあるため失敗時は継続する。
+        pass
+
+
 class ClickHandler:
     """click ステップ — 要素をクリック。"""
 
@@ -348,6 +372,7 @@ class ClickHandler:
         frame = params.get("frame")
         locator = await _resolve_selector(page, by, context, frame=frame)
         logger.info("click: %s", by)
+        await _prepare_locator_for_action(locator)
         await locator.click()
 
     def get_schema(self) -> type[BaseModel]:
@@ -362,6 +387,7 @@ class DblClickHandler:
         frame = params.get("frame")
         locator = await _resolve_selector(page, by, context, frame=frame)
         logger.info("dblclick: %s", by)
+        await _prepare_locator_for_action(locator)
         await locator.dblclick()
 
     def get_schema(self) -> type[BaseModel]:
@@ -379,6 +405,7 @@ class FillHandler:
         locator = await _resolve_selector(page, by, context, frame=frame)
         display_value = "***" if secret else value
         logger.info("fill: %s → %s", by, display_value)
+        await _prepare_locator_for_action(locator)
         await locator.fill(value)
 
     def get_schema(self) -> type[BaseModel]:
@@ -394,6 +421,7 @@ class PressHandler:
         frame = params.get("frame")
         locator = await _resolve_selector(page, by, context, frame=frame)
         logger.info("press: %s → %s", by, key)
+        await _prepare_locator_for_action(locator)
         await locator.press(key)
 
     def get_schema(self) -> type[BaseModel]:
@@ -408,6 +436,7 @@ class CheckHandler:
         frame = params.get("frame")
         locator = await _resolve_selector(page, by, context, frame=frame)
         logger.info("check: %s", by)
+        await _prepare_locator_for_action(locator)
         await locator.check()
 
     def get_schema(self) -> type[BaseModel]:
@@ -422,6 +451,7 @@ class UncheckHandler:
         frame = params.get("frame")
         locator = await _resolve_selector(page, by, context, frame=frame)
         logger.info("uncheck: %s", by)
+        await _prepare_locator_for_action(locator)
         await locator.uncheck()
 
     def get_schema(self) -> type[BaseModel]:
@@ -437,10 +467,38 @@ class SelectOptionHandler:
         frame = params.get("frame")
         locator = await _resolve_selector(page, by, context, frame=frame)
         logger.info("selectOption: %s → %s", by, value)
+        await _prepare_locator_for_action(locator)
         await locator.select_option(value)
 
     def get_schema(self) -> type[BaseModel]:
         return SelectOptionParams
+
+
+class ScrollHandler:
+    """scroll ステップ — マウスホイール相当のスクロールを実行。"""
+
+    async def execute(self, page: Page, params: dict, context: StepContext) -> None:
+        dx = int(params.get("deltaX", 0))
+        dy = int(params.get("deltaY", 0))
+        logger.info("scroll: deltaX=%s deltaY=%s", dx, dy)
+        await page.mouse.wheel(dx, dy)
+
+    def get_schema(self) -> type[BaseModel]:
+        return ScrollParams
+
+
+class ScrollIntoViewHandler:
+    """scrollIntoView ステップ — 要素が表示領域に入るまでスクロール。"""
+
+    async def execute(self, page: Page, params: dict, context: StepContext) -> None:
+        by = params.get("by", params)
+        frame = params.get("frame")
+        locator = await _resolve_selector(page, by, context, frame=frame)
+        logger.info("scrollIntoView: %s", by)
+        await locator.scroll_into_view_if_needed()
+
+    def get_schema(self) -> type[BaseModel]:
+        return ScrollIntoViewParams
 
 
 # ===========================================================================
@@ -815,6 +873,8 @@ _BUILTIN_STEPS: list[tuple[str, StepHandler, StepInfo]] = [
     ("check", CheckHandler(), StepInfo("check", "チェックボックスをチェック", "action")),
     ("uncheck", UncheckHandler(), StepInfo("uncheck", "チェックボックスのチェックを外す", "action")),
     ("selectOption", SelectOptionHandler(), StepInfo("selectOption", "HTML select からオプションを選択", "action")),
+    ("scroll", ScrollHandler(), StepInfo("scroll", "マウスホイール相当のスクロールを実行", "action")),
+    ("scrollIntoView", ScrollIntoViewHandler(), StepInfo("scrollIntoView", "要素が表示領域に入るまでスクロール", "action")),
     # 待機
     ("waitFor", WaitForHandler(), StepInfo("waitFor", "要素が指定状態になるまで待機", "wait")),
     ("waitForVisible", WaitForVisibleHandler(), StepInfo("waitForVisible", "要素が可視状態になるまで待機", "wait")),

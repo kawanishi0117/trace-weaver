@@ -29,6 +29,8 @@ from src.steps.builtin import (
     PressHandler,
     ReloadHandler,
     RouteStubHandler,
+    ScrollHandler,
+    ScrollIntoViewHandler,
     SelectOptionHandler,
     StoreAttrHandler,
     StoreTextHandler,
@@ -55,6 +57,8 @@ def _make_mock_page():
     page.reload = AsyncMock()
     page.screenshot = AsyncMock()
     page.route = AsyncMock()
+    page.mouse = AsyncMock()
+    page.mouse.wheel = AsyncMock()
 
     # Locator モック
     locator = AsyncMock()
@@ -65,6 +69,7 @@ def _make_mock_page():
     locator.check = AsyncMock()
     locator.uncheck = AsyncMock()
     locator.select_option = AsyncMock()
+    locator.scroll_into_view_if_needed = AsyncMock()
     locator.wait_for = AsyncMock()
     locator.text_content = AsyncMock(return_value="テスト値")
     locator.get_attribute = AsyncMock(return_value="attr-value")
@@ -117,7 +122,7 @@ class TestBuiltinRegistration:
             # ナビゲーション
             "goto", "back", "reload",
             # 操作
-            "click", "dblclick", "fill", "press", "check", "uncheck", "selectOption",
+            "click", "dblclick", "fill", "press", "check", "uncheck", "selectOption", "scroll", "scrollIntoView",
             # 待機
             "waitFor", "waitForVisible", "waitForHidden", "waitForNetworkIdle",
             # 検証
@@ -259,6 +264,26 @@ class TestActionHandlers:
         ))
 
         page.get_by_test_id.assert_called_once_with("input")
+
+    def test_scroll_calls_mouse_wheel(self):
+        """scroll が page.mouse.wheel() を呼ぶこと。"""
+        page = _make_mock_page()
+        ctx = _make_mock_context()
+        handler = ScrollHandler()
+
+        asyncio.run(handler.execute(page, {"deltaX": 10, "deltaY": 250}, ctx))
+
+        page.mouse.wheel.assert_called_once_with(10, 250)
+
+    def test_scroll_into_view_resolves_selector(self):
+        """scrollIntoView が locator.scroll_into_view_if_needed() を呼ぶこと。"""
+        page = _make_mock_page()
+        ctx = _make_mock_context()
+        handler = ScrollIntoViewHandler()
+
+        asyncio.run(handler.execute(page, {"by": {"testId": "row"}}, ctx))
+
+        page.get_by_test_id.assert_called_once_with("row")
 
     def test_check_resolves_selector(self):
         """check がセレクタを解決すること。"""
@@ -518,5 +543,5 @@ class TestHighLevelStepRegistration:
         from src.steps import create_full_registry
         registry = create_full_registry()
 
-        # 標準 29 + 高レベル 5 = 34
-        assert len(registry.names) == 34
+        # 標準 31 + 高レベル 5 = 36
+        assert len(registry.names) == 36

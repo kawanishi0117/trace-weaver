@@ -44,6 +44,8 @@ _ACTION_TYPE_TO_DSL: dict[str, str] = {
     "expect_hidden": "expectHidden",
     "expect_text": "expectText",
     "expect_url": "expectUrl",
+    "scroll": "scroll",
+    "scroll_into_view": "scrollIntoView",
 }
 
 
@@ -207,6 +209,10 @@ class Mapper:
         if dsl_name == "expectUrl":
             return self._map_expect_url(action)
 
+        # scroll ステップ — deltaX / deltaY のみ（ロケータなし）
+        if dsl_name == "scroll":
+            return self._map_scroll(action)
+
         # ロケータ付きステップ
         return self._map_locator_step(dsl_name, action)
 
@@ -243,6 +249,14 @@ class Mapper:
         if url is not None:
             body["url"] = url
         return {"expectUrl": body}
+
+    def _map_scroll(self, action: RawAction) -> dict:
+        """scroll アクションを DSL ステップに変換する。"""
+        body: dict = {
+            "deltaX": int(action.args.get("deltaX", 0)),
+            "deltaY": int(action.args.get("deltaY", 0)),
+        }
+        return {"scroll": body}
 
     def _map_locator_step(self, dsl_name: str, action: RawAction) -> Optional[dict]:
         """ロケータ付きアクションを DSL ステップに変換する。
