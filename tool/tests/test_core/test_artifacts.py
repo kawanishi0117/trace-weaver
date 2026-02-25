@@ -1,4 +1,4 @@
-"""
+﻿"""
 ArtifactsManager のユニットテスト
 
 Playwright の Page, BrowserContext はモック（unittest.mock.AsyncMock）を使用する。
@@ -24,8 +24,8 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock
 import pytest
 from ruamel.yaml import YAML
 
-from src.core.artifacts import ArtifactsManager, _sanitize_step_name, mask_secrets
-from src.dsl.schema import (
+from brt.core.artifacts import ArtifactsManager, _sanitize_step_name, mask_secrets
+from brt.dsl.schema import (
     ArtifactsConfig,
     HooksConfig,
     Scenario,

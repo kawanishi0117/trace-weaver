@@ -1,4 +1,4 @@
-"""
+﻿"""
 Runner のユニットテスト
 
 Playwright の Browser / BrowserContext / Page はモック（unittest.mock）を使用する。
@@ -25,7 +25,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 
-from src.core.runner import (
+from brt.core.runner import (
     Runner,
     RunnerConfig,
     ScenarioResult,

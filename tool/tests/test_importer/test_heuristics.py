@@ -1,4 +1,4 @@
-"""
+﻿"""
 Heuristics のユニットテスト
 
 Mapper が生成した DSL ステップリストに対するヒューリスティック処理を検証する。
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.importer.heuristics import Heuristics
+from brt.importer.heuristics import Heuristics
 
 
 # ---------------------------------------------------------------------------

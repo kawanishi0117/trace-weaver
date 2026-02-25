@@ -1,4 +1,4 @@
-"""
+﻿"""
 AiRefiner のユニットテスト
 
 AiRefiner: 既存の YAML DSL Scenario を改善する機能を検証する。
@@ -15,8 +15,8 @@ from __future__ import annotations
 
 import pytest
 
-from src.ai.refine import AiRefiner
-from src.dsl.schema import Scenario
+from brt.ai.refine import AiRefiner
+from brt.dsl.schema import Scenario
 
 
 # ---------------------------------------------------------------------------

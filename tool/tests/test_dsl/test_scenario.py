@@ -1,4 +1,4 @@
-"""
+﻿"""
 Scenario 関連モデルのユニットテスト
 
 ScreenshotConfig, TraceConfig, VideoConfig, ArtifactsConfig,
@@ -15,7 +15,7 @@ HooksConfig, Section, Scenario モデルの動作を検証する。
 import pytest
 from pydantic import ValidationError
 
-from src.dsl.schema import (
+from brt.dsl.schema import (
     ArtifactsConfig,
     HooksConfig,
     Scenario,

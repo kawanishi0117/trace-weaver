@@ -1,4 +1,4 @@
-"""
+﻿"""
 Mapper のユニットテスト
 
 RawAction 中間表現から YAML DSL ステップへの変換を検証する。
@@ -18,8 +18,8 @@ import logging
 
 import pytest
 
-from src.importer.mapper import Mapper, normalize_locator
-from src.importer.py_ast_parser import RawAction
+from brt.importer.mapper import Mapper, normalize_locator
+from brt.importer.py_ast_parser import RawAction
 
 
 # ---------------------------------------------------------------------------

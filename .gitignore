@@ -35,3 +35,6 @@ tool/artifacts/
 
 # Recordings (user-specific raw scripts)
 tool/recordings/
+
+# User workspace data (flows)
+tool/flows/

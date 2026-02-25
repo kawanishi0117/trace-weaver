@@ -1,4 +1,4 @@
-"""
+﻿"""
 CLI テスト — typer.testing.CliRunner を使用した CLI コマンドのテスト
 
 実際のブラウザ起動や LLM 呼び出しは行わず、モック/スタブで代替する。
@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from typer.testing import CliRunner
 
-from src.cli import app
+from brt.cli import app
 
 runner = CliRunner()
 
@@ -311,7 +311,7 @@ class TestRunCommand:
         yaml_file = tmp_path / "scenario.yaml"
         yaml_file.write_text(VALID_YAML, encoding="utf-8")
 
-        from src.core.runner import ScenarioResult
+        from brt.core.runner import ScenarioResult
 
         mock_result = ScenarioResult(
             scenario_title="テストシナリオ",
@@ -320,8 +320,8 @@ class TestRunCommand:
         )
 
         # 遅延インポート先のモジュールをモック
-        with patch("src.steps.create_full_registry") as mock_registry, \
-             patch("src.core.runner.Runner") as MockRunner:
+        with patch("brt.steps.create_full_registry") as mock_registry, \
+             patch("brt.core.runner.Runner") as MockRunner:
             mock_runner_instance = MockRunner.return_value
 
             async def mock_run(*args, **kwargs):
@@ -338,7 +338,7 @@ class TestRunCommand:
         yaml_file = tmp_path / "scenario.yaml"
         yaml_file.write_text(VALID_YAML, encoding="utf-8")
 
-        from src.core.runner import ScenarioResult
+        from brt.core.runner import ScenarioResult
 
         mock_result = ScenarioResult(
             scenario_title="テストシナリオ",
@@ -346,8 +346,8 @@ class TestRunCommand:
             duration_ms=100.0,
         )
 
-        with patch("src.steps.create_full_registry") as mock_registry, \
-             patch("src.core.runner.Runner") as MockRunner:
+        with patch("brt.steps.create_full_registry") as mock_registry, \
+             patch("brt.core.runner.Runner") as MockRunner:
             mock_runner_instance = MockRunner.return_value
 
             async def mock_run(*args, **kwargs):
@@ -571,21 +571,21 @@ class TestHelpers:
 
     def test_extract_base_url_from_goto(self) -> None:
         """goto ステップから baseUrl を抽出する。"""
-        from src.cli import _extract_base_url
+        from brt.cli import _extract_base_url
 
         steps = [{"goto": "http://localhost:3000/login"}]
         assert _extract_base_url(steps) == "http://localhost:3000"
 
     def test_extract_base_url_default(self) -> None:
         """goto がない場合はデフォルト値を返す。"""
-        from src.cli import _extract_base_url
+        from brt.cli import _extract_base_url
 
         steps = [{"click": {"testId": "btn"}}]
         assert _extract_base_url(steps) == "http://localhost:3000"
 
     def test_extract_base_url_with_path(self) -> None:
         """パス付き URL からホスト部分のみ抽出する。"""
-        from src.cli import _extract_base_url
+        from brt.cli import _extract_base_url
 
         steps = [{"goto": "https://example.com/app/dashboard"}]
         assert _extract_base_url(steps) == "https://example.com"

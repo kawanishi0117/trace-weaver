@@ -1,4 +1,4 @@
-"""
+﻿"""
 DslParser のユニットテスト
 
 load / dump / validate メソッドの動作を検証する。
@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from src.dsl.parser import DslParser, DslValidationError
-from src.dsl.schema import Scenario
+from brt.dsl.parser import DslParser, DslValidationError
+from brt.dsl.schema import Scenario
 
 
 # ---------------------------------------------------------------------------
@@ -218,7 +218,7 @@ class TestDslParserDump:
 
     def test_dump_with_artifacts_config(self, parser: DslParser, tmp_path: Path):
         """artifacts 設定を含む Scenario のラウンドトリップ。"""
-        from src.dsl.schema import ArtifactsConfig, ScreenshotConfig
+        from brt.dsl.schema import ArtifactsConfig, ScreenshotConfig
 
         scenario = Scenario(
             title="アーティファクトテスト",

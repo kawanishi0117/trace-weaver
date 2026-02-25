@@ -1,4 +1,4 @@
-"""
+﻿"""
 StepRegistry のテスト
 
 StepRegistry の register / get / list_all の動作確認、
@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from src.steps.registry import StepContext, StepHandler, StepInfo, StepRegistry
+from brt.steps.registry import StepContext, StepHandler, StepInfo, StepRegistry
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-"""
+﻿"""
 DslLinter のユニットテスト
 
 各 lint ルールの検出動作、問題なしケース、複数問題の同時検出、
@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-from src.dsl.linter import DslLinter, LintIssue, LintSeverity
-from src.dsl.schema import Scenario
+from brt.dsl.linter import DslLinter, LintIssue, LintSeverity
+from brt.dsl.schema import Scenario
 
 
 # ---------------------------------------------------------------------------

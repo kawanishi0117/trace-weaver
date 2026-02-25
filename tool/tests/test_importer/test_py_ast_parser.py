@@ -1,4 +1,4 @@
-"""
+﻿"""
 PyAstParser のユニットテスト
 
 Playwright codegen が生成する各種 Python パターンの認識を検証する。
@@ -23,7 +23,7 @@ import logging
 
 import pytest
 
-from src.importer.py_ast_parser import PyAstParser, RawAction
+from brt.importer.py_ast_parser import PyAstParser, RawAction
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-"""
+﻿"""
 統合テスト — 全コンポーネントの結合テスト
 
 CLI → DSL Parser → Runner → StepRegistry → ArtifactsManager → Reporter の
@@ -24,16 +24,16 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from src.ai import AiDrafter, AiExplainer, AiRefiner
-from src.cli import app
-from src.core.artifacts import ArtifactsManager
-from src.core.reporting import Reporter
-from src.core.runner import ScenarioResult, StepResult
-from src.dsl.linter import DslLinter
-from src.dsl.parser import DslParser
-from src.dsl.schema import ArtifactsConfig, Scenario
-from src.importer import Heuristics, Mapper, PyAstParser
-from src.steps import create_full_registry
+from brt.ai import AiDrafter, AiExplainer, AiRefiner
+from brt.cli import app
+from brt.core.artifacts import ArtifactsManager
+from brt.core.reporting import Reporter
+from brt.core.runner import ScenarioResult, StepResult
+from brt.dsl.linter import DslLinter
+from brt.dsl.parser import DslParser
+from brt.dsl.schema import ArtifactsConfig, Scenario
+from brt.importer import Heuristics, Mapper, PyAstParser
+from brt.steps import create_full_registry
 
 cli_runner = CliRunner()
 

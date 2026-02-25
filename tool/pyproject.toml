@@ -20,6 +20,7 @@ dependencies = [
     "ruamel.yaml",
     "typer[all]",
     "jinja2",
+    "fastmcp>=3.0",
 ]
 
 # テスト用依存パッケージ
@@ -32,11 +33,11 @@ test = [
 
 # CLI エントリポイント
 [project.scripts]
-brt = "src.cli:app"
+brt = "brt.cli:app"
 
-# src レイアウト設定
+# パッケージレイアウト設定
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["brt"]
 
 # pytest 設定
 [tool.pytest.ini_options]

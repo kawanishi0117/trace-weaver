@@ -1,4 +1,4 @@
-"""
+﻿"""
 Reporter のユニットテスト
 
 ScenarioResult / StepResult は実際のデータクラスを使用する。
@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from src.core.reporting import Reporter
-from src.core.runner import ScenarioResult, StepResult
+from brt.core.reporting import Reporter
+from brt.core.runner import ScenarioResult, StepResult
 
 
 # ---------------------------------------------------------------------------

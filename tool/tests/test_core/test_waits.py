@@ -1,4 +1,4 @@
-"""
+﻿"""
 待機戦略のユニットテスト
 
 Playwright の Page / Locator はモック（unittest.mock）を使用する。
@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.core.waits import (
+from brt.core.waits import (
     wait_for_network_settle,
     wait_for_overlay_visible,
     wait_for_wijmo_grid_row,

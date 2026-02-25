@@ -12,7 +12,7 @@ inclusion: always
 
 ## ファイル構成
 
-- `tool/src/` 配下にソースコード、`tool/tests/` 配下にテストコードを配置
+- `tool/brt/` 配下にソースコード、`tool/tests/` 配下にテストコードを配置
 - モジュール分割: `core/`, `dsl/`, `steps/`, `importer/`, `ai/`, `templates/`
 - 1ファイルが長くなりすぎないよう適切に分割する（目安: 300行以下）
 - 各ディレクトリに `__init__.py` を配置し、公開 API を `__all__` で明示する

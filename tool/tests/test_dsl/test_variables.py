@@ -1,4 +1,4 @@
-"""
+﻿"""
 VariableExpander のユニットテスト
 
 変数展開エンジンの動作を検証する。
@@ -10,7 +10,7 @@ ${env.X} → 環境変数参照、${vars.X} → シナリオ変数参照の展�
 
 import pytest
 
-from src.dsl.variables import VariableExpander, VariableNotFoundError
+from brt.dsl.variables import VariableExpander, VariableNotFoundError
 
 
 # ---------------------------------------------------------------------------

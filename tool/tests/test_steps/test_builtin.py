@@ -1,4 +1,4 @@
-"""
+﻿"""
 標準ステップハンドラのテスト
 
 Playwright Page/Locator はモックを使用し、
@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from src.steps.builtin import (
+from brt.steps.builtin import (
     ApiMockHandler,
     AssertNoConsoleErrorHandler,
     BackHandler,
@@ -41,7 +41,7 @@ from src.steps.builtin import (
     WaitForVisibleHandler,
     create_default_registry,
 )
-from src.steps.registry import StepContext, StepHandler
+from brt.steps.registry import StepContext, StepHandler
 
 
 # ---------------------------------------------------------------------------
@@ -94,8 +94,8 @@ def _make_mock_page():
 
 def _make_mock_context():
     """StepContext のモックを生成する。"""
-    from src.core.selector import SelectorResolver
-    from src.dsl.variables import VariableExpander
+    from brt.core.selector import SelectorResolver
+    from brt.dsl.variables import VariableExpander
 
     resolver = SelectorResolver(healing="off")
     expander = VariableExpander(env={}, vars={})
@@ -499,37 +499,37 @@ class TestHighLevelStepRegistration:
 
     def test_full_registry_has_overlay_step(self):
         """create_full_registry() が selectOverlayOption を含むこと。"""
-        from src.steps import create_full_registry
+        from brt.steps import create_full_registry
         registry = create_full_registry()
         assert registry.has("selectOverlayOption")
 
     def test_full_registry_has_wijmo_combo_step(self):
         """create_full_registry() が selectWijmoCombo を含むこと。"""
-        from src.steps import create_full_registry
+        from brt.steps import create_full_registry
         registry = create_full_registry()
         assert registry.has("selectWijmoCombo")
 
     def test_full_registry_has_wijmo_grid_step(self):
         """create_full_registry() が clickWijmoGridCell を含むこと。"""
-        from src.steps import create_full_registry
+        from brt.steps import create_full_registry
         registry = create_full_registry()
         assert registry.has("clickWijmoGridCell")
 
     def test_full_registry_has_datepicker_step(self):
         """create_full_registry() が setDatePicker を含むこと。"""
-        from src.steps import create_full_registry
+        from brt.steps import create_full_registry
         registry = create_full_registry()
         assert registry.has("setDatePicker")
 
     def test_full_registry_has_upload_step(self):
         """create_full_registry() が uploadFile を含むこと。"""
-        from src.steps import create_full_registry
+        from brt.steps import create_full_registry
         registry = create_full_registry()
         assert registry.has("uploadFile")
 
     def test_full_registry_all_handlers_satisfy_protocol(self):
         """全登録ハンドラが StepHandler Protocol を満たすこと。"""
-        from src.steps import create_full_registry
+        from brt.steps import create_full_registry
         registry = create_full_registry()
 
         for name in registry.names:
@@ -540,7 +540,7 @@ class TestHighLevelStepRegistration:
 
     def test_full_registry_total_count(self):
         """全レジストリのステップ数が期待値と一致すること。"""
-        from src.steps import create_full_registry
+        from brt.steps import create_full_registry
         registry = create_full_registry()
 
         # 標準 31 + 高レベル 5 = 36

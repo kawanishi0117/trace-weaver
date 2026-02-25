@@ -1,4 +1,4 @@
-"""
+﻿"""
 AiDrafter / AiExplainer のユニットテスト
 
 AiDrafter: 自然言語仕様から YAML DSL Scenario を生成する機能を検証する。
@@ -15,10 +15,10 @@ from __future__ import annotations
 
 import pytest
 
-from src.ai.draft import AiDrafter, LlmClient
-from src.ai.explain import AiExplainer
-from src.ai.prompts import DRAFT_SYSTEM_PROMPT, DRAFT_USER_TEMPLATE
-from src.dsl.schema import Scenario
+from brt.ai.draft import AiDrafter, LlmClient
+from brt.ai.explain import AiExplainer
+from brt.ai.prompts import DRAFT_SYSTEM_PROMPT, DRAFT_USER_TEMPLATE
+from brt.dsl.schema import Scenario
 
 
 # ---------------------------------------------------------------------------

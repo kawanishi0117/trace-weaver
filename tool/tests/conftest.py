@@ -1,4 +1,4 @@
-"""
+﻿"""
 テスト共通フィクスチャ・Hypothesis ストラテジー定義
 
 全テストモジュールで共有するフィクスチャとデータ生成器を提供する。
@@ -146,7 +146,7 @@ def _import_schema():
         schema モジュール。インポートに失敗した場合は None を返す。
     """
     try:
-        from src.dsl import schema
+        from brt.dsl import schema
         return schema
     except (ImportError, ModuleNotFoundError):
         return None
@@ -158,7 +158,7 @@ def make_test_id_selector_strategy():
     """TestIdSelector を生成する Hypothesis ストラテジー。"""
     schema = _import_schema()
     if schema is None:
-        pytest.skip("src.dsl.schema が未実装のためスキップ")
+        pytest.skip("brt.dsl.schema が未実装のためスキップ")
     return st.builds(
         schema.TestIdSelector,
         testId=st.text(min_size=1, max_size=50),
@@ -169,7 +169,7 @@ def make_role_selector_strategy():
     """RoleSelector を生成する Hypothesis ストラテジー。"""
     schema = _import_schema()
     if schema is None:
-        pytest.skip("src.dsl.schema が未実装のためスキップ")
+        pytest.skip("brt.dsl.schema が未実装のためスキップ")
     return st.builds(
         schema.RoleSelector,
         role=st.sampled_from(["button", "textbox", "link", "checkbox"]),
@@ -181,7 +181,7 @@ def make_css_selector_strategy():
     """CssSelector を生成する Hypothesis ストラテジー。"""
     schema = _import_schema()
     if schema is None:
-        pytest.skip("src.dsl.schema が未実装のためスキップ")
+        pytest.skip("brt.dsl.schema が未実装のためスキップ")
     return st.builds(
         schema.CssSelector,
         css=st.text(min_size=1, max_size=100),
@@ -224,7 +224,7 @@ def make_click_step_strategy():
     """ClickStep 用の辞書を生成する Hypothesis ストラテジー。"""
     schema = _import_schema()
     if schema is None:
-        pytest.skip("src.dsl.schema が未実装のためスキップ")
+        pytest.skip("brt.dsl.schema が未実装のためスキップ")
 
     # セレクタを辞書形式で生成
     by_dict = st.one_of(

@@ -1,4 +1,4 @@
-"""
+﻿"""
 ????????????????
 
 Playwright ? Page / Locator ?????unittest.mock????????????
@@ -20,12 +20,12 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 
-from src.core.selector import (
+from brt.core.selector import (
     SelectorResolutionError,
     SelectorResolver,
     _describe_selector,
 )
-from src.dsl.schema import (
+from brt.dsl.schema import (
     AnySelector,
     CssSelector,
     LabelSelector,

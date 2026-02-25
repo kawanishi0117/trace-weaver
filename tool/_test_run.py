@@ -1,12 +1,12 @@
-"""Headless mode test for wiki_nohighlight.yaml"""
+﻿"""Headless mode test for wiki_nohighlight.yaml"""
 import asyncio
 import logging
 
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
 
-from src.dsl.parser import DslParser
-from src.core.runner import Runner, RunnerConfig
-from src.steps import create_full_registry
+from brt.dsl.parser import DslParser
+from brt.core.runner import Runner, RunnerConfig
+from brt.steps import create_full_registry
 
 parser = DslParser()
 scenario = parser.load("flows/wiki_nohighlight.yaml")
